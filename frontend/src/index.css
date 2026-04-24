@@ -1,0 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --bg-main: #f8fafc;
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.3);
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-main);
+  color: #1e293b;
+  overflow-x: hidden;
+}
+
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+}
+
+/* FullCalendar Modernization Overrides */
+.fc {
+  --fc-border-color: #e2e8f0;
+  --fc-button-bg-color: #6366f1;
+  --fc-button-border-color: #6366f1;
+  --fc-button-hover-bg-color: #4f46e5;
+  --fc-button-active-bg-color: #4338ca;
+  --fc-event-bg-color: #818cf8;
+  --fc-event-border-color: #818cf8;
+  --fc-today-bg-color: rgba(99, 102, 241, 0.05);
+}
+
+.fc .fc-toolbar-title {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 1.25rem !important;
+}
+
+.fc .fc-button {
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  text-transform: capitalize !important;
+}
+
+.fc .fc-event {
+  border-radius: 6px !important;
+  padding: 2px 4px !important;
+  font-size: 0.85rem !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
