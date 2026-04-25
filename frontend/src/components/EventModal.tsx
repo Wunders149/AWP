@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import api from '../api/axios';
 import { useCalendarStore } from '../store/calendarStore';
 import { useAuthStore } from '../store/authStore';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -93,28 +94,32 @@ const EventModal: React.FC<EventModalProps> = ({ event, isNew, onClose, calendar
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center sm:p-4">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm hidden sm:block"
       />
       
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        initial={isMobile ? { y: '100%' } : { opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="relative bg-white rounded-[32px] shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden max-h-[90vh]"
+        exit={isMobile ? { y: '100%' } : { opacity: 0, scale: 0.95, y: 20 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+        className={cn(
+          "relative bg-white shadow-2xl w-full flex flex-col overflow-hidden transition-all z-50",
+          isMobile ? "h-full rounded-none" : "rounded-[32px] max-w-2xl max-h-[90vh]"
+        )}
       >
         {/* Header Tabs */}
-        <div className="flex items-center justify-between px-8 pt-8 pb-4 border-b border-slate-100">
-          <div className="flex space-x-6">
+        <div className="flex items-center justify-between px-6 sm:px-8 pt-6 sm:pt-8 pb-4 border-b border-slate-100 bg-white">
+          <div className="flex space-x-4 sm:space-x-6">
             <button 
               onClick={() => setActiveTab('details')}
               className={cn(
-                "pb-4 text-sm font-bold transition-all relative",
+                "pb-4 text-xs sm:text-sm font-bold transition-all relative",
                 activeTab === 'details' ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"
               )}
             >
@@ -125,7 +130,7 @@ const EventModal: React.FC<EventModalProps> = ({ event, isNew, onClose, calendar
               <button 
                 onClick={() => setActiveTab('comments')}
                 className={cn(
-                  "pb-4 text-sm font-bold transition-all relative flex items-center",
+                  "pb-4 text-xs sm:text-sm font-bold transition-all relative flex items-center",
                   activeTab === 'comments' ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"
                 )}
               >
@@ -135,14 +140,14 @@ const EventModal: React.FC<EventModalProps> = ({ event, isNew, onClose, calendar
               </button>
             )}
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors mb-4">
+          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors">
             <X size={20} />
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto">
           {activeTab === 'details' ? (
-            <div className="p-8 space-y-8">
+            <div className="p-6 sm:p-8 space-y-6 sm:space-y-8">
               {/* Role Badge */}
               <div className="flex items-center space-x-2 bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-full w-fit">
                 <Shield size={14} />
@@ -150,25 +155,25 @@ const EventModal: React.FC<EventModalProps> = ({ event, isNew, onClose, calendar
               </div>
 
               <div className="space-y-6">
-                <div className="flex items-start space-x-4">
-                  <div className="bg-slate-100 p-2.5 rounded-xl text-slate-500 mt-1">
-                    <Info size={20} />
+                <div className="flex items-start space-x-3 sm:space-x-4">
+                  <div className="bg-slate-100 p-2 sm:p-2.5 rounded-xl text-slate-500 mt-1">
+                    <Info size={18} sm:size={20} />
                   </div>
                   <div className="flex-1">
                     <input
                       type="text"
                       placeholder="Event Title"
                       disabled={!canEdit}
-                      className="w-full text-2xl font-black text-slate-900 placeholder:text-slate-300 bg-transparent outline-none disabled:opacity-70"
+                      className="w-full text-xl sm:text-2xl font-black text-slate-900 placeholder:text-slate-300 bg-transparent outline-none disabled:opacity-70"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
                     />
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-4">
-                  <div className="bg-slate-100 p-2.5 rounded-xl text-slate-500 mt-1">
-                    <Clock size={20} />
+                <div className="flex items-start space-x-3 sm:space-x-4">
+                  <div className="bg-slate-100 p-2 sm:p-2.5 rounded-xl text-slate-500 mt-1">
+                    <Clock size={18} sm:size={20} />
                   </div>
                   <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -194,15 +199,15 @@ const EventModal: React.FC<EventModalProps> = ({ event, isNew, onClose, calendar
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-4">
-                  <div className="bg-slate-100 p-2.5 rounded-xl text-slate-500 mt-1">
-                    <AlignLeft size={20} />
+                <div className="flex items-start space-x-3 sm:space-x-4">
+                  <div className="bg-slate-100 p-2 sm:p-2.5 rounded-xl text-slate-500 mt-1">
+                    <AlignLeft size={18} sm:size={20} />
                   </div>
                   <div className="flex-1">
                     <textarea
                       placeholder="Add a description or notes..."
                       disabled={!canEdit}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none h-32 transition-all text-sm font-medium resize-none disabled:opacity-50"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none h-32 sm:h-40 transition-all text-sm font-medium resize-none disabled:opacity-50"
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                     />
@@ -211,7 +216,7 @@ const EventModal: React.FC<EventModalProps> = ({ event, isNew, onClose, calendar
               </div>
             </div>
           ) : (
-            <div className="p-8 flex flex-col h-[500px]">
+            <div className="p-6 sm:p-8 flex flex-col h-full sm:h-[500px]">
               <div className="flex-1 space-y-6 overflow-y-auto mb-6 pr-2 scrollbar-hide">
                 {comments.map((c, i) => (
                   <motion.div 
@@ -238,7 +243,7 @@ const EventModal: React.FC<EventModalProps> = ({ event, isNew, onClose, calendar
               </div>
 
               {canComment && (
-                <form onSubmit={handleAddComment} className="relative group">
+                <form onSubmit={handleAddComment} className="relative group pb-4 sm:pb-0">
                   <input
                     type="text"
                     placeholder="Type your message..."
@@ -259,26 +264,26 @@ const EventModal: React.FC<EventModalProps> = ({ event, isNew, onClose, calendar
         </div>
 
         {/* Footer Actions */}
-        <div className="p-8 bg-slate-50/50 flex items-center justify-between border-t border-slate-100">
+        <div className="p-6 sm:p-8 bg-slate-50/50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between border-t border-slate-100 gap-4 sm:gap-0">
           {!isNew && canEdit && (
             <button
               onClick={handleDelete}
-              className="text-slate-400 hover:text-red-500 p-2 transition-colors flex items-center font-bold text-sm"
+              className="text-slate-400 hover:text-red-500 p-2 transition-colors flex items-center justify-center sm:justify-start font-bold text-sm"
             >
               <Trash2 size={18} className="mr-2" /> Delete Event
             </button>
           )}
-          <div className="flex space-x-3 ml-auto">
+          <div className="flex space-x-3 sm:ml-auto">
             <button
               onClick={onClose}
-              className="px-6 py-3 text-slate-500 font-bold hover:bg-white rounded-2xl transition-all border border-transparent hover:border-slate-200"
+              className="flex-1 sm:flex-none px-6 py-3 text-slate-500 font-bold hover:bg-white rounded-2xl transition-all border border-transparent hover:border-slate-200 text-sm sm:text-base"
             >
               Discard
             </button>
             {canEdit && (
               <button
                 onClick={handleSave}
-                className="px-8 py-3 bg-slate-900 text-white font-bold rounded-2xl hover:bg-indigo-600 shadow-xl shadow-slate-200 transition-all active:scale-95"
+                className="flex-1 sm:flex-none px-8 py-3 bg-slate-900 text-white font-bold rounded-2xl hover:bg-indigo-600 shadow-xl shadow-slate-200 transition-all active:scale-95 text-sm sm:text-base"
               >
                 {isNew ? 'Create Event' : 'Save Changes'}
               </button>

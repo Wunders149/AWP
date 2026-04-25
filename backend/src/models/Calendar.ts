@@ -7,11 +7,17 @@ export interface ICalendarMember {
   role: CalendarRole;
 }
 
+export interface IPendingMember {
+  email: string;
+  role: CalendarRole;
+}
+
 export interface ICalendar extends Document {
   name: string;
   description?: string;
   owner: mongoose.Types.ObjectId;
   members: ICalendarMember[];
+  pendingMembers: IPendingMember[];
   createdAt: Date;
 }
 
@@ -22,6 +28,16 @@ const CalendarSchema: Schema = new Schema({
   members: [
     {
       user: { type: Schema.Types.ObjectId, ref: 'User' },
+      role: { 
+        type: String, 
+        enum: ['Owner', 'Editor', 'Commentor', 'Viewer'],
+        default: 'Viewer'
+      }
+    }
+  ],
+  pendingMembers: [
+    {
+      email: { type: String, required: true },
       role: { 
         type: String, 
         enum: ['Owner', 'Editor', 'Commentor', 'Viewer'],

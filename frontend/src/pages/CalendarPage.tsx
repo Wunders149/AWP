@@ -10,8 +10,10 @@ import toast from 'react-hot-toast';
 import api from '../api/axios';
 import { useCalendarStore } from '../store/calendarStore';
 import { useAuthStore } from '../store/authStore';
-import { ChevronLeft, Users, Settings, Plus, LayoutGrid, Calendar as CalendarIcon, AlertCircle, Loader } from 'lucide-react';
+import { ChevronLeft, Users, Settings, Plus, LayoutGrid, Calendar as CalendarIcon, AlertCircle, Loader, Menu, X as CloseIcon } from 'lucide-react';
 import EventModal from '../components/EventModal';
+import CalendarSettingsModal from '../components/CalendarSettingsModal';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 
 const CalendarPage: React.FC = () => {
   const { calendarId } = useParams<{ calendarId: string }>();
@@ -20,7 +22,10 @@ const CalendarPage: React.FC = () => {
   const { user } = useAuthStore();
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [showEventModal, setShowEventModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isNewEvent, setIsNewEvent] = useState(false);
+  const isMobile = useMediaQuery('(max-width: 1024px)');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const socketRef = useRef<Socket | null>(null);
@@ -135,68 +140,148 @@ const CalendarPage: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen bg-white overflow-hidden">
-      {/* Sidebar */}
-      <motion.aside 
-        initial={{ x: -280 }}
-        animate={{ x: 0 }}
-        className="w-72 bg-gradient-to-b from-slate-50 to-slate-100 border-r border-slate-200 flex flex-col z-20"
-      >
-        <div className="p-6">
-          <motion.button 
-            onClick={() => navigate('/')}
-            whileHover={{ x: -4 }}
-            className="flex items-center text-slate-500 hover:text-indigo-600 font-bold transition-colors mb-8 group"
-          >
-            <ChevronLeft size={20} className="mr-2 group-hover:-translate-x-1 transition-transform" /> Back to Dashboard
-          </motion.button>
-
-          <div className="flex items-center space-x-3 mb-10">
-            <div className="bg-gradient-to-br from-indigo-600 to-purple-600 p-2 rounded-xl shadow-lg shadow-indigo-200">
-              <CalendarIcon className="text-white" size={20} />
-            </div>
-            <h1 className="text-lg font-bold text-slate-900 truncate">{currentCalendar?.name}</h1>
-          </div>
-
-          <nav className="space-y-2">
-            <button className="w-full flex items-center space-x-3 px-4 py-3 bg-indigo-50 text-indigo-700 rounded-2xl font-bold transition-all hover:bg-indigo-100">
-              <LayoutGrid size={20} />
-              <span>Calendar View</span>
+    <div className="flex flex-col lg:flex-row h-screen bg-white overflow-hidden">
+      {/* Mobile Header */}
+      {isMobile && (
+        <header className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
+          <div className="flex items-center space-x-3">
+            <button 
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 -ml-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
+            >
+              <Menu size={24} />
             </button>
-            <button className="w-full flex items-center space-x-3 px-4 py-3 text-slate-500 hover:bg-slate-200 rounded-2xl font-semibold transition-all">
-              <Users size={20} />
-              <span>Members ({currentCalendar?.members.length || 0})</span>
-            </button>
-            <button className="w-full flex items-center space-x-3 px-4 py-3 text-slate-500 hover:bg-slate-200 rounded-2xl font-semibold transition-all">
-              <Settings size={20} />
-              <span>Settings</span>
-            </button>
-          </nav>
-        </div>
-
-        <div className="mt-auto p-6">
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Your Role</h3>
             <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-              <span className="text-sm font-bold text-slate-700 uppercase">
-                {currentCalendar?.members.find(m => m.user._id === user?.id)?.role || 'Viewer'}
-              </span>
+              <div className="bg-gradient-to-br from-indigo-600 to-purple-600 p-1.5 rounded-lg shadow-sm">
+                <CalendarIcon className="text-white" size={16} />
+              </div>
+              <h1 className="text-sm font-bold text-slate-900 truncate max-w-[120px]">{currentCalendar?.name}</h1>
             </div>
           </div>
-        </div>
-      </motion.aside>
+          <motion.button 
+            whileTap={{ scale: 0.95 }}
+            onClick={() => navigate('/')}
+            className="p-2 text-slate-500 hover:text-indigo-600 rounded-xl transition-all"
+          >
+            <ChevronLeft size={20} />
+          </motion.button>
+        </header>
+      )}
+
+      {/* Sidebar Drawer */}
+      <AnimatePresence>
+        {(isSidebarOpen || !isMobile) && (
+          <>
+            {isMobile && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsSidebarOpen(false)}
+                className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40"
+              />
+            )}
+            <motion.aside 
+              initial={isMobile ? { x: -280 } : { x: 0 }}
+              animate={{ x: 0 }}
+              exit={isMobile ? { x: -280 } : undefined}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className={`${isMobile ? 'fixed inset-y-0 left-0 w-80 z-50 shadow-2xl' : 'w-72'} bg-gradient-to-b from-slate-50 to-slate-100 border-r border-slate-200 flex flex-col`}
+            >
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-8 lg:block">
+                  {!isMobile && (
+                    <motion.button 
+                      onClick={() => navigate('/')}
+                      whileHover={{ x: -4 }}
+                      className="flex items-center text-slate-500 hover:text-indigo-600 font-bold transition-colors mb-8 group"
+                    >
+                      <ChevronLeft size={20} className="mr-2 group-hover:-translate-x-1 transition-transform" /> Back to Dashboard
+                    </motion.button>
+                  )}
+                  {isMobile && (
+                    <div className="flex items-center space-x-3">
+                      <div className="bg-gradient-to-br from-indigo-600 to-purple-600 p-2 rounded-xl shadow-lg">
+                        <CalendarIcon className="text-white" size={20} />
+                      </div>
+                      <h1 className="text-lg font-bold text-slate-900 truncate">Menu</h1>
+                    </div>
+                  )}
+                  {isMobile && (
+                    <button 
+                      onClick={() => setIsSidebarOpen(false)}
+                      className="p-2 text-slate-400 hover:text-slate-600 rounded-xl transition-all"
+                    >
+                      <CloseIcon size={24} />
+                    </button>
+                  )}
+                </div>
+
+                {!isMobile && (
+                  <div className="flex items-center space-x-3 mb-10">
+                    <div className="bg-gradient-to-br from-indigo-600 to-purple-600 p-2 rounded-xl shadow-lg shadow-indigo-200">
+                      <CalendarIcon className="text-white" size={20} />
+                    </div>
+                    <h1 className="text-lg font-bold text-slate-900 truncate">{currentCalendar?.name}</h1>
+                  </div>
+                )}
+
+                <nav className="space-y-2">
+                  <button className="w-full flex items-center space-x-3 px-4 py-3 bg-indigo-50 text-indigo-700 rounded-2xl font-bold transition-all hover:bg-indigo-100">
+                    <LayoutGrid size={20} />
+                    <span>Calendar View</span>
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setShowSettingsModal(true);
+                      if (isMobile) setIsSidebarOpen(false);
+                    }}
+                    className="w-full flex items-center space-x-3 px-4 py-3 text-slate-500 hover:bg-slate-200 rounded-2xl font-semibold transition-all"
+                  >
+                    <Users size={20} />
+                    <span>Members ({currentCalendar?.members.length || 0})</span>
+                  </button>
+                  {currentCalendar?.members.find(m => m.user._id === user?.id)?.role === 'Owner' && (
+                    <button 
+                      onClick={() => {
+                        setShowSettingsModal(true);
+                        if (isMobile) setIsSidebarOpen(false);
+                      }}
+                      className="w-full flex items-center space-x-3 px-4 py-3 text-slate-500 hover:bg-slate-200 rounded-2xl font-semibold transition-all"
+                    >
+                      <Settings size={20} />
+                      <span>Settings</span>
+                    </button>
+                  )}
+                </nav>
+              </div>
+
+              <div className="mt-auto p-6">
+                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Your Role</h3>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span className="text-sm font-bold text-slate-700 uppercase">
+                      {currentCalendar?.members.find(m => m.user._id === user?.id)?.role || 'Viewer'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col relative overflow-hidden bg-white">
-        <div className="flex-1 p-8 overflow-auto bg-gradient-to-br from-white to-slate-50">
+        <div className="flex-1 p-4 lg:p-8 overflow-auto bg-gradient-to-br from-white to-slate-50">
           <FullCalendar
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-            initialView="dayGridMonth"
+            initialView={isMobile ? "timeGridDay" : "dayGridMonth"}
             headerToolbar={{
-              left: 'prev,next today',
+              left: isMobile ? 'prev,next' : 'prev,next today',
               center: 'title',
-              right: 'dayGridMonth,timeGridWeek,timeGridDay'
+              right: isMobile ? '' : 'dayGridMonth,timeGridWeek,timeGridDay'
             }}
             selectable={true}
             selectMirror={true}
@@ -224,6 +309,13 @@ const CalendarPage: React.FC = () => {
             isNew={isNewEvent}
             onClose={() => setShowEventModal(false)}
             calendarId={calendarId!}
+          />
+        )}
+        {showSettingsModal && (
+          <CalendarSettingsModal
+            calendar={currentCalendar}
+            onClose={() => setShowSettingsModal(false)}
+            onUpdate={() => {}}
           />
         )}
       </AnimatePresence>

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
+import Calendar from '../models/Calendar';
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -11,6 +12,17 @@ export const register = async (req: Request, res: Response) => {
     }
     user = new User({ name, email, password });
     await user.save();
+
+    // Check for pending calendar invitations
+    const pendingCalendars = await Calendar.find({ 'pendingMembers.email': email });
+    for (const calendar of pendingCalendars) {
+      const pendingInfo = calendar.pendingMembers.find(m => m.email === email);
+      if (pendingInfo) {
+        calendar.members.push({ user: user._id as any, role: pendingInfo.role });
+        calendar.pendingMembers = calendar.pendingMembers.filter(m => m.email !== email);
+        await calendar.save();
+      }
+    }
     
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
     res.status(201).json({ token, user: { id: user._id, name, email } });
